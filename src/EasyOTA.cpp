@@ -152,7 +152,15 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 }
 
 int EasyOTA::setupWifi(unsigned long now) {
-	static unsigned long retry_ms;
+	static unsigned long retry_ms = 0;
+
+	if (_retries_current == 0)
+		retry_ms = now;
+	else {
+		if (now - retry_ms <= 10 * _timeout)
+			return 1;
+	}
+	_retries_current++;
 
 	if (_access_points.size() == 1 && !_allowOpen) {
 		// Skip scanning phase for single ap
@@ -177,12 +185,6 @@ int EasyOTA::setupWifi(unsigned long now) {
 				break; // no wifi available, fallback to AP mode
 		}
 	}
-
-	if (_retries_current == 0)
-		retry_ms = now;
-
-	if (now - retry_ms <= 10 * _timeout)
-		return 1;
 
 	if (_maxRetries < 0)
 	{
