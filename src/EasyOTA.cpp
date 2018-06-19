@@ -127,6 +127,7 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 
 	showMessage("Trying " + wifi_ssid, 0);
 
+	WiFi.disconnect();
 	if (BSSID)
 		WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str(), chan, BSSID);
 	else
@@ -142,7 +143,19 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 				_currentAP = wifi_ssid;
 				return 0;
 			case WL_NO_SSID_AVAIL:
+				showMessage("No such SSID", 1);
+				break;
 			case WL_CONNECT_FAILED:
+				showMessage("Connect Failed", 1);
+				break;
+			case WL_DISCONNECTED:
+				//showMessage("Disconnected", 1);
+				break;
+			case WL_IDLE_STATUS:
+				showMessage("IDLE", 1);
+				break;
+			case WL_CONNECTION_LOST:
+				showMessage("Connection lost", 1);
 				break;
 		}
 		delay(10);
@@ -152,7 +165,15 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 }
 
 int EasyOTA::setupWifi(unsigned long now) {
-	static unsigned long retry_ms;
+	static unsigned long retry_ms = 0;
+
+	if (_retries_current == 0)
+		retry_ms = now;
+	else {
+		if (now - retry_ms <= 10 * _timeout)
+			return 1;
+	}
+	_retries_current++;
 
 	if (_access_points.size() == 1 && !_allowOpen) {
 		// Skip scanning phase for single ap
@@ -177,12 +198,6 @@ int EasyOTA::setupWifi(unsigned long now) {
 				break; // no wifi available, fallback to AP mode
 		}
 	}
-
-	if (_retries_current == 0)
-		retry_ms = now;
-
-	if (now - retry_ms <= 10 * _timeout)
-		return 1;
 
 	if (_maxRetries < 0)
 	{
