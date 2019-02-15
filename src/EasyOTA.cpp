@@ -238,6 +238,7 @@ int EasyOTA::scanWifi(unsigned long now)
 				WiFi.scanNetworks(true);
 				return 1;
 			} else {
+				showMessage("Scan Complete", 0);
 				String bestSSID;
 				int32_t bestRSSI = -1000;
 				uint8 bestBSSID[6];
