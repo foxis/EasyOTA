@@ -73,6 +73,7 @@ class EasyOTA
 		void eachAP(THandlerFunction_APList fn, void * param);
 		void setPassword(const String& password);
     void setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnet);
+    void setStaticIP(const IPAddress& ip, const IPAddress& dns, const IPAddress& gateway, const IPAddress& subnet);
 
 		///
 		/// one of these must be called inside main loop
@@ -138,6 +139,7 @@ class EasyOTA
     IPAddress _ip;
     IPAddress _gateway;
     IPAddress _subnet;
+    IPAddress _dns;
 
 		std::map<String, String> _access_points;
 		String _hostname;

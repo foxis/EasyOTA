@@ -64,12 +64,17 @@ void EasyOTA::setPassword(const String& password)
 {
 	_password = password;
 }
-void EasyOTA::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnet)
+void EasyOTA::setStaticIP(const IPAddress& ip, const IPAddress& dns, const IPAddress& gateway, const IPAddress& subnet)
 {
 		_static = true;
 		_ip = ip;
 		_gateway = gateway;
 		_subnet = subnet;
+		_dns = dns;
+}
+void EasyOTA::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnet)
+{
+	setStaticIP(ip, gateway, gateway, subnet);
 }
 void EasyOTA::addAP(const String& wifi_ssid, const String& wifi_password)
 {
@@ -141,7 +146,7 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 		WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
 
 	if (_static) {
-		WiFi.config(_ip, _gateway, _gateway, _subnet);
+		WiFi.config(_ip, _dns, _gateway, _subnet);
 	}
 
 	do {
