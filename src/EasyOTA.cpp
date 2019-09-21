@@ -139,6 +139,7 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 
 	showMessage("Trying " + wifi_ssid, 0);
 
+	WiFi.mode(WIFI_STA);
 	WiFi.disconnect();
 	if (BSSID)
 		WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str(), chan, BSSID);
