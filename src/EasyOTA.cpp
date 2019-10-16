@@ -64,6 +64,18 @@ void EasyOTA::setPassword(const String& password)
 {
 	_password = password;
 }
+void EasyOTA::setStaticIP(const IPAddress& ip, const IPAddress& dns, const IPAddress& gateway, const IPAddress& subnet)
+{
+		_static = true;
+		_ip = ip;
+		_gateway = gateway;
+		_subnet = subnet;
+		_dns = dns;
+}
+void EasyOTA::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnet)
+{
+	setStaticIP(ip, gateway, gateway, subnet);
+}
 void EasyOTA::addAP(const String& wifi_ssid, const String& wifi_password)
 {
 	_access_points.insert(std::pair<String, String>(wifi_ssid, wifi_password));
@@ -127,11 +139,17 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 
 	showMessage("Trying " + wifi_ssid, 0);
 
+	WiFi.mode(WIFI_STA);
 	WiFi.disconnect();
 	if (BSSID)
 		WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str(), chan, BSSID);
 	else
 		WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
+
+	if (_static) {
+		WiFi.config(_ip, _dns, _gateway, _subnet);
+	}
+
 	do {
 		status = WiFi.status();
 
@@ -238,6 +256,7 @@ int EasyOTA::scanWifi(unsigned long now)
 				WiFi.scanNetworks(true);
 				return 1;
 			} else {
+				showMessage("Scan Complete", 0);
 				String bestSSID;
 				int32_t bestRSSI = -1000;
 				uint8_t bestBSSID[6];
