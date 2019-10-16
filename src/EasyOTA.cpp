@@ -240,7 +240,7 @@ int EasyOTA::scanWifi(unsigned long now)
 			} else {
 				String bestSSID;
 				int32_t bestRSSI = -1000;
-				uint8 bestBSSID[6];
+				uint8_t bestBSSID[6];
 				int32_t bestChannel;
 				std::set<String> black_list;
 				bool call_scan = true;
@@ -252,11 +252,16 @@ int EasyOTA::scanWifi(unsigned long now)
 						uint8_t sec_scan;
 						uint8_t* BSSID_scan;
 						int32_t chan_scan;
+#ifndef ESP32
 						bool hidden_scan;
-
 						WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan, hidden_scan);
 						if (call_scan)
 							onScan(ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan, hidden_scan);
+#else
+						WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan);
+						if (call_scan)
+							onScan(ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan, false);
+#endif
 
 						bool bl = black_list.count(ssid_scan);
 						bool cap = _access_points.count(ssid_scan);
@@ -272,7 +277,11 @@ int EasyOTA::scanWifi(unsigned long now)
 
 						// skip black-listed networks (those that failed to connect to)
 						if (rssi_scan > bestRSSI && !bl) {
+#ifndef ESP32
 							if ((sec_scan == ENC_TYPE_NONE && _allowOpen && exhausted || cap)) {
+#else
+							if ((sec_scan == WIFI_AUTH_OPEN && _allowOpen && exhausted || cap)) {
+#endif
 								bestSSID = ssid_scan;
 								bestRSSI = rssi_scan;
 								bestChannel = chan_scan;
@@ -318,9 +327,9 @@ void EasyOTA::loop(unsigned long now) {
 		case EOS_UNKNOWN:
 			WiFi.mode(WIFI_STA);
 #ifdef ESP8266
-		  WiFi.hostname(_hostname);
+		  	WiFi.hostname(_hostname);
 #elif ESP32
-		  WiFi.setHostname(_hostname);
+		  	WiFi.setHostname(_hostname.c_str());
 #endif
 			_retries_current = 0;
 			_ap = false;
