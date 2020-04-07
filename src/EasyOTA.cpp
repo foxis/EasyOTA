@@ -46,7 +46,7 @@ EasyOTA::EasyOTA(const String& hostname, int port) {
 	on_scan = NULL;
 	_timeout = 10000;
 	_ap = false;
-	_maxRetries = 0;
+	_maxRetries = 3;
 	_retries_current = 0;
 	_scanInterval = -1;
 }
@@ -185,13 +185,11 @@ int EasyOTA::connectWifi(unsigned long startTime, const String& wifi_ssid, const
 int EasyOTA::setupWifi(unsigned long now) {
 	static unsigned long retry_ms = 0;
 
-	if (_retries_current == 0)
+	if (now - retry_ms > 1000){
 		retry_ms = now;
-	else {
-		if (now - retry_ms <= 10 * _timeout)
-			return 1;
+	} else {
+		return 1;
 	}
-	_retries_current++;
 
 	if (_access_points.size() == 1 && !_allowOpen) {
 		// Skip scanning phase for single ap
@@ -249,10 +247,11 @@ int EasyOTA::scanWifi(unsigned long now)
 	{
 		int8_t scanResult = WiFi.scanComplete();
 		if (scanResult == WIFI_SCAN_RUNNING) {
+			showMessage("Wifi scan running", 0);
 			return 1;
 		} else {
 			if (scanResult <= 0) {
-				showMessage("Wifi scan", 0);
+				showMessage("Wifi scan start", 0);
 				WiFi.scanNetworks(true);
 				return 1;
 			} else {
